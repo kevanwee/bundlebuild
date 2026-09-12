@@ -49,7 +49,7 @@ index as the source of truth and checks the inputs before anyone prints 800 page
 | **Index** | Generated front matter: court, case, parties, title, volume; then Tab / Document / Date / Page rows grouped by section. Spills across pages as needed. |
 | **Hyperlinks** | Every index row is a link annotation to its first page. |
 | **Bookmarks** | PDF outline: sections, then `Tab n: title` under each. |
-| **Sidecars** | `<output>.index.json` (tab, title, date, page range). For authorities bundles with `citation` fields, `<output>.citecheck.json`, a manifest [citecheck](../citecheck) can consume. |
+| **Sidecars** | `<output>.index.json` (tab, title, date, page range). For authorities bundles with `citation` fields, `<output>.citecheck.json`, a manifest [citecheck](https://github.com/kevanwee/citecheck) can consume. |
 
 ## Install
 
@@ -112,8 +112,8 @@ deterministic and local.
 
 ## Related projects
 
-[citecheck](../citecheck) consumes the authorities sidecar. [chronology](../chronology)
-entries cite bundle page references produced here. See also [sg-deadline](../sg-deadline).
+[citecheck](https://github.com/kevanwee/citecheck) consumes the authorities sidecar. [chronology](https://github.com/kevanwee/chronology)
+entries cite bundle page references produced here. See also [sg-deadline](https://github.com/kevanwee/sg-deadline).
 
 ## License
 
