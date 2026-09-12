@@ -1,0 +1,51 @@
+# Example manifest. Run `bundlebuild check examples/bundle.yaml` to see the pre-flight
+# report (the files do not exist, so you will see errors; that is the point of check).
+title: Bundle of Documents
+court: In the General Division of the High Court of the Republic of Singapore
+case: HC/OC 123/2026
+parties: Alpha Pte Ltd v Beta Pte Ltd
+volume: "1"
+output: out/bundle.pdf
+start_page: 1
+stamp:
+  position: bottom-right
+  prefix: ""
+
+sections:
+  - title: Pleadings
+    documents:
+      - tab: "1"
+        title: Originating Claim and Statement of Claim
+        date: 2026-03-02
+        file: docs/01-soc.pdf
+      - tab: "2"
+        title: Defence and Counterclaim
+        date: 2026-03-23
+        file: docs/02-defence.pdf
+      - tab: "3"
+        title: Reply and Defence to Counterclaim
+        date: 2026-04-06
+        file: docs/03-reply.pdf
+
+  - title: Affidavits
+    documents:
+      - tab: "4"
+        title: Affidavit of Tan Ah Kow (1st)
+        date: 2026-05-15
+        file: docs/04-tak-1.pdf
+      - tab: "5"
+        title: Affidavit of Lim Bee Hoon (1st)
+        date: 2026-05-15
+        file: docs/05-lbh-1.pdf
+        pages: "1-40"
+
+  - title: Correspondence
+    documents:
+      - tab: "6"
+        title: Letter of demand, Alpha to Beta
+        date: 2025-11-14
+        file: docs/06-lod.pdf
+      - tab: "7"
+        title: Reply, Beta to Alpha
+        date: 2025-11-28
+        file: docs/07-reply-letter.pdf

@@ -1,0 +1,29 @@
+# Bundle of authorities. `citation` on each document makes the build emit a
+# citecheck manifest (out/authorities.citecheck.json) alongside the PDF.
+title: Bundle of Authorities
+case: HC/OC 123/2026
+parties: Alpha Pte Ltd v Beta Pte Ltd
+output: out/authorities.pdf
+stamp:
+  prefix: "BOA"
+
+sections:
+  - title: Cases
+    documents:
+      - tab: "1"
+        title: Sembcorp Marine Ltd v PPL Holdings Pte Ltd
+        citation: "[2013] SGCA 43"
+        date: 2013-08-21
+        file: cases/sembcorp.pdf
+      - tab: "2"
+        title: Zurich Insurance (Singapore) Pte Ltd v B-Gold Interior Design & Construction Pte Ltd
+        citation: "[2008] SGCA 27"
+        date: 2008-06-25
+        file: cases/zurich.pdf
+  - title: Legislation
+    documents:
+      - tab: "3"
+        title: Limitation Act 1959, ss 6 and 24A
+        date: 2020-12-31
+        file: legislation/limitation-act.pdf
+        pages: "1-3,9-11"
