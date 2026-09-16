@@ -128,6 +128,11 @@ def _short(pages: list[int], n: int = 8) -> str:
 def check(m: Manifest) -> CheckReport:
     report = CheckReport()
     out = m.resolve(m.output)
+    outputs = {out.resolve(), out.with_suffix(".index.json").resolve(),
+               out.with_suffix(".citecheck.json").resolve()}
+    for d in m.documents:
+        if m.resolve(d.file).resolve() in outputs:
+            report.findings.append(Finding("error", d.tab, "output would overwrite a source file"))
     if out.exists():
         report.findings.append(Finding("warn", None,
                                        f"output exists and will be overwritten: {out}"))

@@ -120,30 +120,45 @@ def _draw_index(m: Manifest, rows: list[IndexRow]) -> tuple[bytes, list[tuple[in
         c.drawString(COLS["tab"], y, section.title.upper())
         y -= ROW_H
         for row in (r for r in rows if r.doc in section.documents):
-            if y < MARGIN + ROW_H:
+            title = row.doc.title
+            if row.doc.citation:
+                title = f"{title} {row.doc.citation}"
+            title_lines = _wrap(c, title, COLS["date"] - COLS["title"] - 8)
+            height = max(ROW_H, len(title_lines) * 12 + 6)
+            if height > PAGE_H - 2 * MARGIN - 60:
+                raise ValueError("Index entry is too long; shorten its title or citation")
+            if y - height < MARGIN:
                 c.showPage()
                 page_no += 1
                 y = header(False)
             c.setFont("Helvetica", 10)
             c.drawString(COLS["tab"], y, row.doc.tab)
-            title = row.doc.title
-            if row.doc.citation:
-                title = f"{title} {row.doc.citation}"
-            c.drawString(COLS["title"], y, _fit(c, title, COLS["date"] - COLS["title"] - 8))
+            for index, line in enumerate(title_lines):
+                c.drawString(COLS["title"], y - index * 12, line)
             c.drawString(COLS["date"], y, row.doc.date_label)
             c.drawString(COLS["pages"], y, row.page_label)
-            rects.append((page_no, (MARGIN, y - 4, PAGE_W - MARGIN, y + ROW_H - 6)))
-            y -= ROW_H
+            rects.append((page_no, (MARGIN, y - height + 10, PAGE_W - MARGIN, y + 12)))
+            y -= height
     c.save()
     return buf.getvalue(), rects
 
 
-def _fit(c: canvas.Canvas, text: str, width: float, font: str = "Helvetica", size: int = 10) -> str:
-    if c.stringWidth(text, font, size) <= width:
-        return text
-    while text and c.stringWidth(text + "...", font, size) > width:
-        text = text[:-1]
-    return text + "..."
+def _wrap(c: canvas.Canvas, text: str, width: float) -> list[str]:
+    lines, line = [], ""
+    for word in text.split():
+        candidate = f"{line} {word}".strip()
+        if c.stringWidth(candidate, "Helvetica", 10) <= width:
+            line = candidate
+            continue
+        if line:
+            lines.append(line)
+        line = ""
+        for char in word:
+            if c.stringWidth(line + char, "Helvetica", 10) > width:
+                lines.append(line)
+                line = ""
+            line += char
+    return [*lines, line] if line else lines
 
 
 # -- stamping ----------------------------------------------------------------------------
@@ -170,6 +185,11 @@ def _stamp_overlay(w: float, h: float, label: str, m: Manifest) -> PdfReader:
 
 
 def build(m: Manifest, *, skip_check: bool = False) -> BuildResult:
+    out = m.resolve(m.output)
+    outputs = {out.resolve(), out.with_suffix(".index.json").resolve(),
+               out.with_suffix(".citecheck.json").resolve()}
+    if any(m.resolve(d.file).resolve() in outputs for d in m.documents):
+        raise ValueError("Output would overwrite a source file")
     if not skip_check:
         rep = check(m)
         if not rep.ok:
@@ -200,13 +220,16 @@ def build(m: Manifest, *, skip_check: bool = False) -> BuildResult:
         writer.add_page(p)
     for row, (_, r, sel) in zip(rows, readers, strict=True):
         row.target_index = len(writer.pages)
-        for i in sel:
-            page = r.pages[i]
-            label = m.stamp.label(row.first + sel.index(i))
-            w, h = float(page.mediabox.width), float(page.mediabox.height)
+        for offset, i in enumerate(sel):
+            # A repeated source page needs fresh content objects, not shared references.
+            writer.reset_translation(r)
+            page = writer.add_page(r.pages[i])
+            page.transfer_rotation_to_content()
+            label = m.stamp.label(row.first + offset)
+            w, h = float(page.cropbox.width), float(page.cropbox.height)
             overlay = _stamp_overlay(w, h, label, m)
-            page.merge_page(overlay.pages[0])
-            writer.add_page(page)
+            page.merge_translated_page(overlay.pages[0], float(page.cropbox.left),
+                                       float(page.cropbox.bottom))
 
     # 4. bookmarks
     section_items = {}

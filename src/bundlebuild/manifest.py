@@ -20,8 +20,8 @@ class Stamp(BaseModel):
     position: StampPosition = StampPosition.BOTTOM_RIGHT
     prefix: str = ""  # e.g. "AB" -> "AB-12"; "" -> "12"
     separator: str = "-"
-    font_size: int = 10
-    margin_pt: int = 28
+    font_size: int = Field(default=10, ge=6, le=36)
+    margin_pt: int = Field(default=28, ge=10, le=100)
 
     def label(self, n: int) -> str:
         return f"{self.prefix}{self.separator}{n}" if self.prefix else str(n)
@@ -29,7 +29,7 @@ class Stamp(BaseModel):
 
 class Document(BaseModel):
     tab: str  # "1", "12A", "B-3"; a string because tabs are labels, not numbers
-    title: str
+    title: str = Field(min_length=1, max_length=1000)
     file: Path
     date: date | str | None = None
     description: str | None = None
@@ -42,6 +42,8 @@ class Document(BaseModel):
 
     def page_selection(self, total: int) -> list[int]:
         """0-based page indices to include."""
+        if total < 1:
+            raise ValueError(f"{self.file}: PDF contains no pages")
         if not self.pages:
             return list(range(total))
         out: list[int] = []
@@ -49,6 +51,10 @@ class Document(BaseModel):
             part = part.strip()
             if "-" in part:
                 a, b = part.split("-", 1)
+                if int(a) > int(b):
+                    raise ValueError(f"{self.file}: descending page range {part!r}")
+                if int(a) < 1 or int(b) > total:
+                    raise ValueError(f"{self.file}: page range exceeds {total} pages")
                 out.extend(range(int(a) - 1, int(b)))
             else:
                 out.append(int(part) - 1)
@@ -79,7 +85,7 @@ class Manifest(BaseModel):
     volume: str | None = None
     output: Path = Path("out/bundle.pdf")
     base_dir: Path | None = Field(default=None, description="resolved from the manifest's dir")
-    start_page: int = 1
+    start_page: int = Field(default=1, ge=1)
     stamp: Stamp = Stamp()
     index_title: str = "INDEX"
     sections: list[Section]
